@@ -29,6 +29,7 @@ Il progetto è stato collaudato su distribuzione Ubuntu ma dovrebbe essere in gr
 - OpenGL (Mesa)
 - SDL 1.2
 - freeglut
+
 Per installare tali pacchetti mediante aptitude è possibile utilizzare il comando
 sudo apt-get install mesa-common-dev freeglut3-dev libsdl1.2-dev
 
