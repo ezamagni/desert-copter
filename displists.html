@@ -1,0 +1,38 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (MacOSX)">
+	<META NAME="AUTHOR" CONTENT="Enrico Zamagni">
+	<META NAME="CREATED" CONTENT="20120712;20453200">
+	<META NAME="CHANGEDBY" CONTENT="Enrico Zamagni">
+	<META NAME="CHANGED" CONTENT="20120715;14514800">
+	<META NAME="CHANGEDBY" CONTENT="Enrico Zamagni">
+</HEAD>
+<BODY LANG="it-IT" DIR="LTR">
+<P ALIGN=RIGHT><A HREF="index.html">Pagina principale</A></P>
+<H1>Display lists</H1>
+<P>È già stato spiegato che il progetto fa un abbondante uso di
+modelli tridimensionali caricati da dei documenti .obj, tuttavia una
+volta caricate le relative strutture dati, il modello (assieme ai
+suoi materiali) rimane invariato ed è possibile applicarvi soltanto
+le normali trasformazioni previste da OpenGL (scalatura, traslazione
+e rotazione). Per questo motivo risulta inutile fornire al layer
+grafico le informazioni sulla topologia dell'oggetto ogni volta che
+lo si vuole disegnare. A tale scopo sono state ampiamente utilizzate
+le funzionalità di display lists messe a disposizione da OpenGL sin
+dalla versione 1.1.</P>
+<P>Ogni elemento memorizzato su file, all'atto del caricamento viene
+compilato in una display list a lui dedicata. Nel momento in cui è
+necessario renderizzare il modello, viene opportunamente impostato lo
+stato OpenGL necessario, vengono applicate eventuali trasformazioni e
+viene richiamata la lista relativa a quella mesh. OpenGL può quindi
+mantenere compilate nella memoria del dispositivo video le
+informazioni sulla geometria dell'oggetto, le sue texture e i
+materiali applicati e guadagnare – almeno teoricamente – un
+consistente vantaggio in termini di performance. Un' eccezione è
+data dalla cassa, visto che la sua geometria è composta soltanto da
+otto vertici e sei facce.</P>
+</BODY>
+</HTML>

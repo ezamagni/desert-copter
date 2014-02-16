@@ -1,0 +1,77 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (MacOSX)">
+	<META NAME="AUTHOR" CONTENT="Enrico Zamagni">
+	<META NAME="CREATED" CONTENT="20120715;19003400">
+	<META NAME="CHANGEDBY" CONTENT="Enrico Zamagni">
+	<META NAME="CHANGED" CONTENT="20120715;22310900">
+</HEAD>
+<BODY LANG="it-IT" DIR="LTR">
+<P ALIGN=RIGHT STYLE="page-break-before: always"><A HREF="index.html">Pagina
+principale</A></P>
+<H1>Riflessi</H1>
+<P>Quello di riflessione è in realtà un piccolo effetto
+implementato per sperimentare con la tecnica dell'environmental
+mapping. L'elicottero è realizzato unendo tre modelli: un modello
+per le pale, un modello per il corpo e un terzo modello dedicato
+esclusivamente alla geometria dei vetri della fusoliera. Quest'ultimo
+oggetto è privo di texture e di materiali in quanto viene reso
+appunto con una tecnica di environmental mapping quando il
+corrispondente effetto viene abilitato.</P>
+<P>Normalmente, i finestrini della fusoliera vengono renderizzati
+impostando un colore bluastro leggermente trasparente per dare l'idea
+del vetro di cui sono composti. Quando l'effetto di riflessione è
+abilitato si vuole invece dare l'impressione che il cielo e le nuvole
+si specchino sui vetri, un risultato facilmente ottenibile con la
+tecnica dell'environmental mapping.</P>
+<P>Quando l'opzione corrispondente è abilitata, in <B>copter.c</B>
+viene abilitata – contestualmente al rendering del modello che
+descrive i vetri – la generazione automatica di coordinate texture
+di tipo sphere map (GL_SPHERE_MAP) e si effettua il binding ad una
+texture appositamente dedicata.</P>
+<P>Inizialmente si voleva realizzare un effetto più completo, ovvero
+si voleva renderizzare l'intera scena due volte: la prima con un
+angolo di vista e un rapporto prospettico molto elevati e col punto
+di vista in corrispondenza con la posizione dell'elicottero, la
+seconda con le usuali impostazioni e guardando l'ambiente dalla
+telecamera. L'intento era quello di salvare l'intero risultato del
+primo passaggio e utilizzarlo come texture ambientale da applicare ai
+vetri della fusoliera.<BR>La realizzazione ha però evidenziato
+alcuni difetti: innanzitutto è impossibile con le sole librerie
+standard OpenGL realizzare una visione “a occhio di pesce”
+(fisheye) della scena in modo da avere una texture che si adattasse
+perfettamente alla generazione di coordinate di tipo sphere map; si
+rischiava poi di imbattersi in un deciso calo delle prestazioni visto
+che renderizzare due volte l'intera scena (escludendo magari nel
+primo passaggio l'elicottero e alcuni oggetti minori come la cassa o
+il tabellone) comporta un costo quasi doppio rispetto al normale;
+infine l'effetto non migliorava sensibilmente il risultato della
+scena, visto che normalmente si osserva la parte posteriore
+dell'elicottero e i vetri sono comunque di dimensione ridotta.</P>
+<P>Si è deciso quindi di ridimensionare tale effetto ma si è
+mantenuta intatta l'idea di base. Nella funzione <I><SPAN STYLE="font-weight: normal">createCopter()</SPAN></I>
+viene inizializzata la texture ambientale (richiamando la funzione
+<B>createEnvTexture()</B><SPAN STYLE="font-weight: normal">)</SPAN>
+come una semplice immagine di dimensioni ridotte rispetto al viewport
+e inizialmente vuota. Questa viene poi riempita nella procedura
+<B>renderEnvMap()</B> in <I>game.c</I><SPAN STYLE="font-style: normal">.
+Tale funzione reimposta la matrice di proiezione e le trasformazioni
+di vista (salvando ovviamente quelle già impostate da </SPAN><I>renderFrame()</I><SPAN STYLE="font-style: normal">)
+in modo da renderizzare la scena come se la si guardasse dalla cabina
+di pilotaggio dell'elicottero. Per contenere la complessità
+dell'effetto viene però renderizzata soltanto la skybox.<BR>Terminato
+questo passaggio il viewport, la proiezione e la vista precedenti
+vengono ripristinate, il color buffer e il depth buffer vengono
+puliti e si riprende il rendering come se nulla fosse successo. Il
+risultato del rendering appena compiuto viene letteralmente copiato
+nella texture di enviromental mapping servendosi della funzione
+OpenGL </SPAN><I>glCopyTexImage2D()</I><SPAN STYLE="font-style: normal">.
+È così possibile utilizzarla nel momento in cui viene resa la
+geometria dell'elicottero.</SPAN></P>
+<P ALIGN=RIGHT STYLE="page-break-before: always"><A HREF="index.html"><SPAN STYLE="font-style: normal">Pagina
+principale</SPAN></A></P>
+</BODY>
+</HTML>

@@ -1,0 +1,95 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (MacOSX)">
+	<META NAME="AUTHOR" CONTENT="Enrico Zamagni">
+	<META NAME="CREATED" CONTENT="20120713;11155400">
+	<META NAME="CHANGEDBY" CONTENT="Enrico Zamagni">
+	<META NAME="CHANGED" CONTENT="20120713;12274700">
+</HEAD>
+<BODY LANG="it-IT" DIR="LTR">
+<P ALIGN=RIGHT><A HREF="index.html">Pagina principale</A></P>
+<H1>Gestione dell'input</H1>
+<P><IMG SRC="imgs/input_schema.jpg" NAME="immagini1" ALIGN=LEFT WIDTH=414 HEIGHT=293 BORDER=0>Come
+è già stato accennato, il rilevamento dell'input utente è
+realizzato per mezzo delle librerie SDL: nel primo dei tre step del
+loop di gioco, main.c rileva eventuali eventi SDL (<I>SDL_Event</I>)
+e li processa. Se si tratta di eventi di sua competenza si preoccupa
+di processarli, in ogni caso l'evento SDL viene sempre passato alla
+funzione <B>getInput()</B><SPAN STYLE="font-weight: normal"> di
+</SPAN><I><SPAN STYLE="font-weight: normal">input.c</SPAN></I><SPAN STYLE="font-weight: normal">
+per delegare a quest'ultimo il compito di rilevare l'input corrente e
+di riversarli nella struttura </SPAN><B>curInput</B><SPAN STYLE="font-weight: normal">.
+In questo modo main.c viene epurato dall'enorme quantità di codice
+ripetitivo che è necessario scrivere per gestire i comandi
+dell'utente. Terminata la prima fase del ciclo, </SPAN><I><SPAN STYLE="font-weight: normal">curInput</SPAN></I><SPAN STYLE="font-weight: normal">
+viene passato alla procedura di update di </SPAN><I><SPAN STYLE="font-weight: normal">game.c</SPAN></I><SPAN STYLE="font-weight: normal">
+e di conseguenza, agli eventuali elementi della scena che aggiornano
+il loro stato anche in funzione dei comandi del giocatore.</SPAN></P>
+<P><SPAN STYLE="font-weight: normal">Si vuole inoltre che i
+componenti che andranno a leggere lo stato dell'input non debbano
+dipendere dalla libreria SDL ed è stata quindi predisposta una
+semplice struttura </SPAN><B>InputState</B><SPAN STYLE="font-weight: normal">
+che tiene traccia dell'input utente limitatamente alle necessità di
+questo progetto. Essa è composta da due strutture: la prima
+(</SPAN><B>KeyState)</B><SPAN STYLE="font-weight: normal"> mantiene
+le informazioni relative ai tasti premuti (tastiera e/o gamepad) e la
+seconda (</SPAN><B>CursorState</B><SPAN STYLE="font-weight: normal">)
+contiene lo stato del cursore in maniera simile a quanto realizzato
+da SDL.</SPAN></P>
+<P><BR><BR>
+</P>
+<P><IMG SRC="imgs/strut_input.jpg" NAME="immagini2" ALIGN=LEFT WIDTH=394 HEIGHT=338 BORDER=0><SPAN STYLE="font-weight: normal">Il
+modo in cui viene gestito l'input è decisamente poco flessibile (i
+controlli sono profondamente cablati nel codice), questo porta però
+il vantaggio di poter realizzare con poco sforzo le funzionalità
+necessarie e senza grossi investimenti in termini di tempo.</SPAN></P>
+<P><SPAN STYLE="font-weight: normal">L'imput utente è organizzato
+per mappe di tasti: il tipo di dato </SPAN><B>KeyMap</B><SPAN STYLE="font-weight: normal">
+è in realtà un alias per il tipo unsigned short e permette di
+leggere fino a otto flag ( char = byte = 8 bit) corrispondenti ad
+altrettanti tasti che possono essere premuti (flag 1) o rilasciati
+(flag 0). Con questo sistema si può dividere l'intera tastiera in
+“zone di interesse”, ciascuna limitata a otto pulsanti. Si
+prevedono 4 mappe di tasti (da cui la dimensione del vettore kState):
+una per gestire le frecce direzionali</SPAN> (KM_ARROWS), una per i
+tasti invio ed enter (chiamati tasti di controllo: KM_CONTROL), una
+per i comandi dell'elicottero (KM_COPTER) e un'ultima per controllare
+la telecamera quando è in modalità libera (KM_CAMERA).<BR>In realtà
+è possibile assegnare più tasti allo stesso flag di una keymap
+(infatti l'elicottero è controllabile con la tastiera e con il
+tastierino numerico, oltre che col gamepad), pertanto è utile
+pensare ad un flag come ad un'azione intrapresa dall'utente
+indipendentemente dal tasto scelto per comandarla. Ad esempio il flag
+FORWARD della keymap relativa all'elicottero indica che l'utente
+vuole fare avanzare l'elicottero ma non impone uno specifico bottone.
+È nella funzione <I>getInput()</I> di <I>input.c</I> che viene
+realizzato (purtroppo staticamente) il mapping tra evento SDL
+specifico e relativo flag di una keymap.</P>
+<P>La gestione del gamepad si affida allo stesso principio e gli
+eventi SDL relativi al controller vengono mappati verso i rispettivi
+flag.<BR>Per gestire adeguatamente i diversi controlli analogici
+messi a disposizione, la struttura <I>KeyState</I> viene arricchita
+da un vettore di sei valori (<B>value</B>) in virgola mobile (uno per
+ogni controllo analogico utilizzato) che possono assumere valori tra
+-1 e 1 per indicare la posizione di uno stick o di un trigger
+relativamente al suo asse. Quando l'utente utilizza la tastiera, la
+funzione <I>getInput()</I> si preoccupa di tradurre la pressione di
+un tasto con il valore -1 o 1 all'interno dell'indice appropriato e
+il rilascio del tasto con il valore 0. In questo modo le varie
+procedure di aggiornamento degli elementi di scena non devono
+distinguere tra input derivante da tastiera o da joystick.</P>
+<P><B>NB</B>: per la messa a punto del codice è stato utilizzato un
+gamepad Logitech del tutto simile ai controller “standard”
+adottati da Playstation3 e Xbox360. L'utilizzo di un diverso tipo di
+gamepad può portare ad una diversa numerazione degli indici usati da
+SDL per riconoscere i diversi bottoni e gli assi analogici. Se il
+proprio gamepad non risponde come indicato dalla <A HREF="istruzioni.html">guida
+al gioco</A>, si consiglia di regolare manualmente il mapping dei
+bottoni e dei trigger modificando l'header <I>input.h</I>.</P>
+<P ALIGN=RIGHT STYLE="page-break-before: always"><A HREF="index.html">Pagina
+principale</A></P>
+</BODY>
+</HTML>

@@ -1,0 +1,129 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (MacOSX)">
+	<META NAME="AUTHOR" CONTENT="Enrico Zamagni">
+	<META NAME="CREATED" CONTENT="20120715;17523800">
+	<META NAME="CHANGEDBY" CONTENT="Enrico Zamagni">
+	<META NAME="CHANGED" CONTENT="20120715;18570900">
+</HEAD>
+<BODY LANG="it-IT" DIR="LTR">
+<P ALIGN=RIGHT STYLE="page-break-before: always"><A HREF="index.html">Pagina
+principale</A></P>
+<H1>Motion blur</H1>
+<P>L'effetto di motion blur prevede che gli oggetti che si muovono
+velocemente risultino sfocati all'occhio umano in misura tanto
+maggiore quanto più velocemente si spostano.</P>
+<P>Con questi presupposti, se attivato, il motion blur abilita due
+effetti: 
+</P>
+<OL>
+	<LI><DD>quando l'elicottero si sposta nella scena, il terreno e gli
+	altri oggetti lasciano una breve scia sfumata tanto più pronunciata
+	quanto più intensa è la velocità del velivolo.</DD><LI><DD>
+	Le pale dell'elicottero – quando quest'ultimo è acceso –
+	appaiono leggermente più “trasparenti” per meglio simulare
+	l'elevata velocità di rotazione.</DD></OL>
+<P>Per il primo risultato si fa un utilizzo abbastanza semplice
+dell'accumulation buffer (AB): si salva cioè una parte del frame
+renderizzato in un secondo buffer e al frame successivo si fondono
+adeguatamente le due immagini, col risultato che tutti gli oggetti
+che erano stati salvati nell'AB ricompaiono – leggermente sfumati –
+nel nuovo frame e così via anche nel successivo finché non verranno
+tanto sfumati da risultare invisibili. Il risultato complessivo
+mostra come i vari elementi della scena lasciano una leggera scia
+dietro di loro.</P>
+<P>L'effetto appena descritto è realizzato nelle fasi finali della
+procedura di rendering <B>renderScene()</B> in <I>game.c</I><SPAN STYLE="font-style: normal">.
+I passi da seguire sono sostanzialmente i seguenti:</SPAN></P>
+<OL>
+	<LI><DD><FONT COLOR="#2e0d6e"><FONT FACE="Menlo-Regular"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-style: normal">glAccum</SPAN></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Menlo-Regular"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-style: normal">(</SPAN></FONT></FONT></FONT><FONT COLOR="#643820"><FONT FACE="Menlo-Regular"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-style: normal">GL_MULT</SPAN></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Menlo-Regular"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-style: normal">,
+	blurAmount);</SPAN></FONT></FONT></FONT> <BR>Si moltiplica il
+	contenuto dell'accumulation buffer per un fattore <I>blurAmount</I><SPAN STYLE="font-style: normal">
+	in modo che i colori dei vari frammenti del buffer (cioè
+	un'istantanea della scena precedente) perdano saturazione.
+	</SPAN><I>blurAmount</I><SPAN STYLE="font-style: normal"> è
+	calcolato in modo da essere un valore compreso tra 0 e </SPAN><I>maxBlur</I><SPAN STYLE="font-style: normal">
+	(con </SPAN><I>maxBlur</I><SPAN STYLE="font-style: normal"> &lt; 1)
+	e direttamente proporzionale alla velocità dell'elicottero. Si
+	osserva comunque una soglia di velocità minima sotto la quale
+	l'effetto non ha alcuna intensità.</SPAN></DD><LI><DD>
+	<FONT COLOR="#2e0d6e"><FONT FACE="Menlo-Regular"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-style: normal">glAccum</SPAN></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Menlo-Regular"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-style: normal">(</SPAN></FONT></FONT></FONT><FONT COLOR="#643820"><FONT FACE="Menlo-Regular"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-style: normal">GL_ACCUM</SPAN></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Menlo-Regular"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-style: normal">,
+	</SPAN></FONT></FONT></FONT><FONT COLOR="#1c00cf"><FONT FACE="Menlo-Regular"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-style: normal">1</SPAN></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Menlo-Regular"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-style: normal">
+	– blurAmount);</SPAN></FONT></FONT></FONT><BR>Al contenuto
+	dell'accumulation buffer viene sommato quello del frame buffer
+	(l'immagine che si sta renderizzando) moltiplicato per il
+	complementare a 1 del fattore <I>blurAmount</I><SPAN STYLE="font-style: normal">.
+	In parole povere, se blurAmount vale ad esempio 0.4, l'AB conterrà
+	un'immagine composta per il 40% dal rendering precedente e per il
+	60% dal frame buffer attuale.</SPAN></DD><LI><DD>
+	<FONT COLOR="#2e0d6e"><FONT FACE="Menlo-Regular"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-style: normal">glAccum</SPAN></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Menlo-Regular"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-style: normal">(</SPAN></FONT></FONT></FONT><FONT COLOR="#643820"><FONT FACE="Menlo-Regular"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-style: normal">GL_RETURN</SPAN></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Menlo-Regular"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-style: normal">,
+	</SPAN></FONT></FONT></FONT><FONT COLOR="#1c00cf"><FONT FACE="Menlo-Regular"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-style: normal">1.0f</SPAN></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Menlo-Regular"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-style: normal">);</SPAN></FONT></FONT></FONT><BR>L'intero
+	contenuto dell'accumulation buffer viene riversato senza modifiche
+	nel frame buffer. Si ricordi che questa operazione non ha l'effetto
+	di pulire o resettare l'AB e pertanto, il risultato finale di ogni
+	rendering si ripercuote sul successivo fintanto che <I>blurAmount</I>
+	si mantiene sufficientemente maggiore a zero.</DD></OL>
+<P>Il momento esatto in cui vengono svolte le precedenti operazioni è
+di importanza critica: tutto quello che si è già disegnato prima di
+questo punto presenterà l'effetto scia descritto, quello che viene
+eventualmente aggiunto in seguito apparirà completamente nitido. Per
+questo motivo queste tre istruzioni vengono richiamate quando tutta
+la scena è stata resa ad eccezione dell'elicottero che viene
+renderizzato solo in seguito, visto che la telecamera lo segue
+instancabilmente e non sarebbe realistico vedere una sua scia.</P>
+<P>Il motion blur porta però con sé un difetto: non essendo
+rigidamente scandito dallo scorrere del tempo in accordo con gli slot
+fisici, come avviene per tutte le procedure di aggiornamento di stato
+e simulazione, la sua applicazione avviene tanto più frequentemente
+quanto maggiore è il framerate raggiunto dal dispositivo grafico.
+Applicare più volte i passaggi sopra descritti senza che gli oggetti
+si spostino (cioè senza che tra render successivi si inneschi la
+procedura di simulazione fisica) porta ad un intrinseco annullamento
+dell'effetto stesso, visto che il contenuto dell'accumulation buffer
+viene sfumato più e più volte e sommato alla stessa immagine.
+Viceversa, se il framerate è troppo basso, avvengono numerosi step
+di simulazione tra un render e l'altro e gli oggetti si spostano
+parecchio tra immagini successive (da cui la tipica sensazione di
+“scatto”) e il motion blur ha l'effetto di rendere l'immagine
+notevolmente confusa.</P>
+<P>Dosare adeguatamente la formula con cui viene calcolato <I>blurAmount</I>
+non aiuta a risolvere questo difetto, visto che si finirebbe sempre
+col favorire uno o l'altro caso. Un'utile accorgimento è quello di
+impostare a livello di driver grafico la funzionalità di VSync che
+impedisce al device grafico di produrre più frame di quanti lo
+schermo sia in grado di visualizzare in un secondo (sopratutto per
+annullare il famoso effetto di <I>tearing</I><SPAN STYLE="font-style: normal">
+delle immagini). Con questo settaggio impostato, se la macchina è
+sufficientemente potente, il framerate dovrebbe appiattirsi sui 60-70
+frame al secondo, che è esattamente la frequenza sulla quale è
+stato dosata l'implementazione del motion blur.</SPAN></P>
+<P><SPAN STYLE="font-style: normal">Per ottenere il secondo effetto
+inizialmente citato, si utilizza una tecnica che va oltre
+all'utilizzo dell'accumulation buffer. Quando il motion blur è
+abilitato, prima di svolgere le tre operazioni sull'AB si richiama la
+procedura </SPAN><SPAN STYLE="font-style: normal"><B>renderPrevRotor()</B></SPAN><SPAN STYLE="font-style: normal">
+di </SPAN><I>copter.h</I><SPAN STYLE="font-style: normal"> che si
+occupa di renderizzare esclusivamente le pale dell'elicottero così
+come apparivano dal risultato dello step fisico precedente. In breve:
+vengono disegnate le eliche in una posizione lievemente ruotata
+rispetto a quella realmente assunta. Inoltre le pale vengono
+renderizzate con il blending attivato e tali che risultino
+semitrasparenti. La procedura </SPAN><I>renderCopter()</I><SPAN STYLE="font-style: normal">
+renderizza ovviamente l'intero elicottero (comprese le pale nella
+loro posizione corretta) ma solo dopo le operazioni sull'AB.</SPAN></P>
+<P><SPAN STYLE="font-style: normal">Bisogna infine discutere
+dell'impatto sulle performance dovuto all'uso dell'accumulation
+buffer. L'impiego di un buffer aggiuntivo comporta in ogni caso dei
+costi aggiuntivi (sempre più onerosi man mano che la dimensione del
+framebuffer cresce). Sfortunatamente, alcune implementazioni di
+OpenGL (o alcuni driver video) </SPAN>non accelerano l'accumulation
+buffer via hardware e il suo utilizzo in questi casi abbatte
+drasticamente il framerate della simulazione, con tutti i riscontri
+negativi che ne derivano.</P>
+<P ALIGN=RIGHT STYLE="page-break-before: always"><A HREF="index.html">Pagina
+principale</A></P>
+</BODY>
+</HTML>

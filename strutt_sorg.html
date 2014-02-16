@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (MacOSX)">
+	<META NAME="AUTHOR" CONTENT="Enrico Zamagni">
+	<META NAME="CREATED" CONTENT="20120711;19442800">
+	<META NAME="CHANGEDBY" CONTENT="Enrico Zamagni">
+	<META NAME="CHANGED" CONTENT="20120713;14542400">
+	<META NAME="CHANGEDBY" CONTENT="Enrico Zamagni">
+	<META NAME="CHANGEDBY" CONTENT="Enrico Zamagni">
+	<STYLE TYPE="text/css">
+	<!--
+		P.collegamento-superiore { text-align: right }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="it-IT" DIR="LTR">
+<P CLASS="collegamento-superiore"><A HREF="index.html">Pagina
+principale</A></P>
+<H1>Struttura del progetto</H1>
+<P>L'elaborato è scritto interamente in linguaggio C (la specifica
+utilizzata è la gnu99, ampiamente supportata da gcc). I numerosi
+sorgenti sono organizzati secondo il seguente schema:</P>
+<P><IMG SRC="imgs/foldertree.png" NAME="immagini1" ALIGN=LEFT HSPACE=12 VSPACE=6 WIDTH=136 HEIGHT=680 BORDER=0>La
+cartella <U><B>root</B></U> contiene i sorgenti principali del
+progett<SPAN STYLE="font-weight: normal">o: main.c e game.c, la
+definizione di strutture e funzioni per il calcolo vettoriale
+(mathext.h), per la definizione delle opzioni di gioco (options.h) e
+per la gestione dell'input (input.h).</SPAN></P>
+<P><B>main.c</B> <SPAN STYLE="font-weight: normal">definisce il punto
+d'ingresso dell'intero programma. In questo modulo si trovano le
+variabili di stato principali (dimensione viewport, opzioni correnti,
+temporizzazioni, …), le funzioni di inizializzazione/chiusura
+principali relative a SDL e OpenGL, la procedura primaria per la
+renderizzazione di un frame e il ciclo di gioco. main.c è
+responsabile anche di interagire coi menu utente.</SPAN></P>
+<P><B>game.c</B> <SPAN STYLE="font-weight: normal">si preoccupa di
+gestire tutto ciò che interessa esclusivamente la scena di gioco. Al
+suo interno si trovano le funzioni di inizializzazione per i vari
+elementi che compongono l'ambientazione (cielo, terreno, elicottero,
+cassa, …), le funzioni per gestire il loro stato e – sopratutto –
+le procedure per la loro resa grafica.</SPAN></P>
+<P STYLE="font-weight: normal">Il loop di gioco in main.c è
+organizzato per seguire fondamentalmente tre step: 
+</P>
+<OL>
+	<LI><P><SPAN STYLE="font-weight: normal">processing degli eventi
+	SDL, in particolar modo quelli relativi all'input utente. La
+	gestione dell'input è affidata a </SPAN><B>input.c</B> <SPAN STYLE="font-weight: normal">e
+	prevede la compilazione di una struttura dati (</SPAN><I><SPAN STYLE="font-weight: normal">InputState</SPAN></I><SPAN STYLE="font-weight: normal">)
+	che contiene lo stato corrente dell'input (tastiera, gamepad, mouse)
+	e che verrà passata ai componenti del gioco che ne hanno bisogno.
+	In questo modo main.c e input.c sono gli unici sorgenti che si
+	interfacciano direttamente a SDL.</SPAN></P>
+	<LI><P><SPAN STYLE="font-weight: normal">simulazione fisica. In
+	questo step si determina l'evoluzione della logica di gioco in un
+	arco temporale (slot) prefissato e pari a 10 millisecondi. Ogni
+	oggetto “vivo” della scena attraversa questa fase e aggiorna il
+	proprio stato in base a quello dello slot precedente e alle azioni
+	dell'utente rilevate nello step 1. Tutte le funzioni adibite a
+	questa fase iniziano col prefisso “</SPAN><I><SPAN STYLE="font-weight: normal">update</SPAN></I>”<SPAN STYLE="font-weight: normal">.
+	</SPAN>
+	</P>
+	<LI><P><SPAN STYLE="font-weight: normal">resa grafica. In questo
+	ultima parte vengono richiamate in un ordine ben preciso le diverse
+	procedure responsabili del rendering dei diversi oggetti di scena e
+	di interfaccia utente. Ognuna di queste inizia col prefisso “</SPAN><I><SPAN STYLE="font-weight: normal">render</SPAN></I>”
+	<SPAN STYLE="font-weight: normal">se si tratta di elementi di scena,
+	oppure “</SPAN><I><SPAN STYLE="font-weight: normal">draw</SPAN></I>”
+	<SPAN STYLE="font-weight: normal">nel caso di elementi di
+	user-interface (GUI). La funzione di rendering principale
+	(</SPAN><I><SPAN STYLE="font-weight: normal">renderFrame()</SPAN></I><SPAN STYLE="font-variant: normal"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">)
+	si preoccupa di impostare adeguatamente lo stato OpenGL per la resa
+	di un nuovo frame, di richiamare in successione le diverse procedure
+	grafiche (prima quelle relative alla vista 3D, poi quelle di
+	“disegno” dell'interfaccia) e infine di effettuare lo scambio
+	tra front e back buffer.</SPAN></SPAN></SPAN></P>
+</OL>
+<P><SPAN STYLE="font-variant: normal"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">La
+cartella </SPAN></SPAN></SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="font-style: normal"><U><B>gui</B></U></SPAN></SPAN><SPAN STYLE="text-decoration: none">
+</SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="text-decoration: none"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">contiene
+i sorgenti e gli header per quei componenti che realizzano
+l'<A HREF="interfaccia.html">interfaccia utente</A>. Si distinguono
+principalmente menu.c, responsabile per la gestione e disegno dei
+menu di gioco e hud.c per disegnare gli indicatori dell'HUD (head-up
+display).</SPAN></SPAN></SPAN></SPAN></P>
+<P><SPAN STYLE="font-variant: normal"><SPAN STYLE="font-style: normal"><U><B>graphics</B></U></SPAN></SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="text-decoration: none">
+</SPAN></SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="text-decoration: none"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">contiene
+al suo interno la definizione di tre componenti di importanza
+fondamentale: </SPAN></SPAN></SPAN></SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="text-decoration: none"><SPAN STYLE="font-style: normal"><B>camera.c</B></SPAN></SPAN></SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="text-decoration: none">
+</SPAN></SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="text-decoration: none"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">per
+la gestione della <A HREF="camera.html">telecamera di vista</A>,
+</SPAN></SPAN></SPAN></SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="text-decoration: none"><SPAN STYLE="font-style: normal"><B>model.c</B></SPAN></SPAN></SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="text-decoration: none">
+</SPAN></SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="text-decoration: none"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">per
+il caricamento e il rendering di <A HREF="mesh.html">mesh
+tridimensionali</A> e </SPAN></SPAN></SPAN></SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="text-decoration: none"><SPAN STYLE="font-style: normal"><B>texture.c</B></SPAN></SPAN></SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="text-decoration: none">
+</SPAN></SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="text-decoration: none"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">per
+il caricamento e il processing di texture. Vista la loro importanza,
+a ciascuno di questi moduli è dedicata una sezione specifica della
+documentazione.</SPAN></SPAN></SPAN></SPAN></P>
+<P><SPAN STYLE="font-variant: normal"><SPAN STYLE="text-decoration: none"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">Infine,
+la cartella </SPAN></SPAN></SPAN></SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="font-style: normal"><U><B>world</B></U></SPAN></SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="text-decoration: none">
+</SPAN></SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="text-decoration: none"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">all'interno
+di graphics contiene la descrizione dei vari oggetti che popolano la
+scena di gioco. Sono utilizzati direttamente da game.c e comprendono
+i sorgenti per la gestione e la resa dell'elicottero, del terreno,
+dei palloni aerostatici, delle casse e della skybox.</SPAN></SPAN></SPAN></SPAN></P>
+<P STYLE="page-break-before: always"><IMG SRC="imgs/comp_schema.jpg" NAME="immagini2" ALIGN=LEFT WIDTH=626 HEIGHT=368 BORDER=0><BR CLEAR=LEFT><BR><BR>
+</P>
+<P CLASS="collegamento-superiore"><A HREF="index.html"><SPAN STYLE="text-decoration: none"><B>Pagina
+principale</B></SPAN></A></P>
+</BODY>
+</HTML>

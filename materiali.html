@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (MacOSX)">
+	<META NAME="AUTHOR" CONTENT="Enrico Zamagni">
+	<META NAME="CREATED" CONTENT="20120712;10560500">
+	<META NAME="CHANGEDBY" CONTENT="Enrico Zamagni">
+	<META NAME="CHANGED" CONTENT="20120712;12244500">
+	<STYLE TYPE="text/css">
+	<!--
+		P { margin-top: 0.1cm; margin-bottom: 0.4cm }
+		P.collegamento-superiore { text-align: right }
+		H3.cjk { font-family: "SimSun" }
+		H3.ctl { font-family: "Lucida Sans" }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="it-IT" DIR="LTR">
+<P CLASS="collegamento-superiore"><A HREF="index.html"><SPAN STYLE="font-style: normal">Pagina
+principale</SPAN></A></P>
+<H1><SPAN STYLE="font-style: normal">Materiali</SPAN></H1>
+<P><SPAN STYLE="font-style: normal">Essere in grado di rappresentare
+un modello tridimensionale non solo mediante la sua descrizione
+geometrica ma anche assegnando alle superfici che lo compongono delle
+informazioni sul materiale di cui è fatto è un importantissimo
+passo avanti per poter dare maggior realismo alla scena che si
+intende rappresentare.<BR>Tutti i modelli salvati su file utilizzati
+nel progetto hanno un materiale associato e le loro descrizioni sono
+salvate e caricate in accordo con il formato WaveFront Material
+(</SPAN><SPAN STYLE="font-style: normal"><B>.mtl</B></SPAN><SPAN STYLE="font-style: normal">)
+previsto dalla stessa specifica </SPAN><I>.obj</I><SPAN STYLE="font-style: normal">.<BR>Tale
+formato è tuttavia estremamente ricco di funzionalità anche molto
+avanzate ed è stato implementato solo in minima parte, le
+caratteristiche realizzate sono:</SPAN></P>
+<UL>
+	<LI><DD><SPAN STYLE="font-style: normal">colore ambientale</SPAN></DD><LI><DD>
+	<SPAN STYLE="font-style: normal">colore diffusivo</SPAN></DD><LI><DD>
+	<SPAN STYLE="font-style: normal">colore speculare</SPAN></DD><LI><DD>
+	<SPAN STYLE="font-style: normal">fattore speculare</SPAN></DD><LI><DD>
+	<SPAN STYLE="font-style: normal">texture colore</SPAN></DD></UL>
+<H3 CLASS="western" STYLE="page-break-after: avoid"><B><SPAN STYLE="font-style: normal">Memorizzazione
+di un materiale</SPAN></B></H3>
+<P><SPAN STYLE="font-style: normal">Ciascuna di queste informazioni e
+un nome univoco per il materiale vengono memorizzate nella struttura
+</SPAN><SPAN STYLE="font-style: normal"><B>Material</B></SPAN><SPAN STYLE="font-style: normal">
+descritta in </SPAN><I>model.h</I><SPAN STYLE="font-style: normal"> e
+riportata nella figura sottostante. Un singolo documento .mtl viene
+richiamato da un file di descrizione mesh .obj e descrive al suo
+interno uno o più materiali Ogni materiale può essere riferito
+durante la descrizione topologica del formato obj mediante la frase
+</SPAN><SPAN STYLE="font-style: normal"><B>usemtl</B></SPAN><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">
+seguita dal nome testuale del materiale. Per effetto di tale
+istruzione, tutte le facce descritte da quel punto in poi
+utilizzeranno il materiale richiesto.</SPAN></SPAN></P>
+<P><IMG SRC="imgs/strut_material.png" NAME="immagini1" ALIGN=LEFT HSPACE=8 VSPACE=2 WIDTH=408 HEIGHT=239 BORDER=0><SPAN STYLE="font-style: normal">Il
+parsing di</SPAN> un file .mtl è realizzato dalla funzione
+<I>loadMtlLib()</I> in <I>model.c</I> e risulta relativamente
+semplice. La procedura si occupa di inizializzare la struttura <B>MtlLib</B>
+e di scorrere il documento, istanziando e compilando delle opportune
+strutture Material mano a mano che vengono trovate delle definizioni
+di materiali. Tutte le funzionalità avanzate previste dalla
+specifica vengono ignorate. Se un materiale dispone di una texture
+associata, al campo <B>textureName</B> viene assegnato il riferimento
+opengl per la texture in oggetto, che viene opportunamente caricata
+attraverso la procedura <I>bindTexture()</I>.</P>
+<P>Al termine del parsing, la struttura MtlLib non è però pronta
+per essere utilizzata: la funzione di caricamento dei modelli
+(<SPAN STYLE="font-style: normal"><A HREF="mesh.html#Parsing di un file di modello|outline">loadModelFromOBJ</A>)
+deve infatti occuparsi di compilare i campi relativi al mapping facce
+/ materiali. È nel file .obj che viene infatti descritto quando
+utilizzare un ben preciso materiale.<BR>Per avere queste informazioni
+a portata di mano nel momento in cui un modello viene renderizzato,
+la struttura MtlLib prevede due particolari vettori di interi:
+</SPAN><SPAN STYLE="font-style: normal"><B>faceIdx</B></SPAN><SPAN STYLE="font-style: normal">
+e </SPAN><SPAN STYLE="font-style: normal"><B>faceRef</B></SPAN><SPAN STYLE="font-style: normal">.
+Il primo vettore mantiene la lista degli indici delle facce a partire
+dalle quali si inizia ad usare un materiale. Il secondo vettore
+(dimensionato come il primo) raccoglie l'indice del materiale per
+quel riferimento.</SPAN></P>
+<P><SPAN STYLE="font-style: normal">La funzione </SPAN><I>destroyModel()</I><SPAN STYLE="font-style: normal">
+si preoccupa anche di liberare tutte le risorse occupate dalla
+libreria dei materiali associata ad un modello.</SPAN></P>
+<H3 CLASS="western"><SPAN STYLE="font-style: normal">Rendering di un
+materiale</SPAN></H3>
+<P><SPAN STYLE="font-style: normal">La funzione di renderizzazione
+</SPAN><A HREF="mesh.html#Rendering di un modello|outline"><I>renderModel()</I></A><SPAN STYLE="font-style: normal">
+si occupa anche della resa del materiale per ogni faccia che viene
+disegnata.</SPAN></P>
+<P><SPAN STYLE="font-style: normal">All'inizio della procedura di
+rendering di un modello, se non esiste una libreria di materiali per
+quell'oggetto viene attivato il </SPAN>mapping colore-materiale
+(GL_COLOR_MATERIAL): in questo modo fuori dalla procedura è
+possibile impostare un colore mediante glColor e il modello verrà
+reso utilizzando un unico colore ambientale e diffusivo anche in
+presenza del flag GL_LIGHTING abilitato.</P>
+<P>Se un oggetto è collegato ad una libreria di materiali, prima di
+disegnare una faccia si controlla se il suo indice compare nel
+vettore <I>faceIdx</I> sopra discusso. In caso affermativo si procede
+con uno switch tra materiali, ovvero si leggono le informazioni
+relative al nuovo materiale nella struttura <I>Material</I> (l'indice
+del materiale è recuperato in <I>faceRef</I>) e si istruisce opengl
+sulle sue caratteristiche attraverso delle chiamate glMaterial con
+gli opportuni parametri (GL_AMBIENT, GL_DIFFUSE, GL_SPECULAR,
+GL_SHININESS).</P>
+<P>Se il materiale che viene applicato porta con se una texture
+colore, all'atto dello switch viene abilitato il flag GL_TEXTURE_2D e
+viene fatto il binding alla texture opportuna mediante la chiamata
+glBindTexture. Se un materiale invece non prevede una texture è
+necessario disabilitare il flag GL_TEXTURE_2D per evitare che la
+texture precedentemente utilizzata continui a “sporcare” le facce
+renderizzate di li in poi.</P>
+<P CLASS="collegamento-superiore" STYLE="page-break-before: always"><A HREF="index.html"><SPAN STYLE="font-style: normal">Pagina
+principale</SPAN></A></P>
+</BODY>
+</HTML>

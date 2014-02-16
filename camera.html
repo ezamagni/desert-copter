@@ -1,0 +1,123 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (MacOSX)">
+	<META NAME="AUTHOR" CONTENT="Enrico Zamagni">
+	<META NAME="CREATED" CONTENT="20120713;9530200">
+	<META NAME="CHANGEDBY" CONTENT="Enrico Zamagni">
+	<META NAME="CHANGED" CONTENT="20120713;11050400">
+</HEAD>
+<BODY LANG="it-IT" DIR="LTR">
+<P ALIGN=RIGHT><A HREF="index.html">Pagina principale</A></P>
+<H1>Telecamera</H1>
+<P>Pur non essendo un elemento visualizzato a schermo, la telecamera
+è un componente fondamentale per una buona simulazione 3D
+interattiva, essa “fa le veci” dell'occhio del giocatore e
+dovrebbe essere allo stesso tempo funzionale e “invisibile”
+all'utente, per poterlo aiutare ad immergersi meglio nella scena. In
+questo progetto la telecamera è stato uno tra i primi componenti
+realizzati e per non dover ricorrere a successive modifiche si è
+deciso di realizzarlo in modo che fosse flessibile, sufficientemente
+funzionale e in grado di adattarsi a diverse esigenze.</P>
+<P><IMG SRC="imgs/camera_schema.jpg" NAME="immagini1" ALIGN=LEFT HSPACE=6 WIDTH=358 HEIGHT=526 BORDER=0>Il
+design della telecamera prevede in primo luogo che sia possibile
+gestire tre informazioni fondamentali: la posizione della stessa
+(<B>pos</B>), il punto della scena che la telecamera sta osservando
+(<B>eye</B><SPAN STYLE="font-weight: normal">, purtroppo nella
+terminologia OpenGL questo termine indica la posizione
+dell'osservatore e non il suo punto di vista) e la direzione
+verticale alla telecamera (</SPAN><B>up</B><SPAN STYLE="font-weight: normal">).
+</SPAN>
+</P>
+<P><SPAN STYLE="font-weight: normal">Utilizzando queste tre semplici
+variabili, siamo già in grado di impostare le trasformazioni di
+vista in OpenGL, ad esempio utilizzando la funzione </SPAN><I><SPAN STYLE="font-weight: normal">gluLookAt</SPAN></I><SPAN STYLE="font-weight: normal">
+della libreria di supporto GLU. Si è preferito comunque aumentare le
+funzionalità per evitare di dover continuamente modificare
+manualmente questi valori: in particolare – vista la tipologia di
+gioco – si desidera realizzare una telecamera “ad inseguimento”,
+cioè che rincorre continuamente la posizione e la direzione della
+fusoliera dell'elicottero. Principalmente per motivi di debug, si è
+comunque interessati a gestire anche una modalità di vista “free”
+in cui l'utente può orientare e spostare la telecamera a suo
+piacimento.</SPAN></P>
+<P><SPAN STYLE="font-weight: normal">Quando la telecamera è in
+modalità libera, questa viene spostata e orientata manualmente
+intervenendo sulle tre proprietà sopra descritte e il suo
+funzionamento è particolarmente semplice. Si ut</SPAN>ilizzano a tal
+scopo funzioni come <I>moveCamera()</I>, <I>rotateCamera()</I> e
+<I>rollCamera()</I><SPAN STYLE="font-style: normal"> descritte in
+</SPAN><SPAN STYLE="font-style: normal"><B>camera.h</B></SPAN><SPAN STYLE="font-style: normal">.
+</SPAN>
+</P>
+<P><SPAN STYLE="font-style: normal">Quando la telecamera è in
+modalità inseguimento, il suo comportamento è decisamente più
+sofisticato. Questo è sopratutto dovuto al fatto che non si voleva
+una camera completamente “rigida” ovvero che inseguisse il
+proprio obiettivo in maniera istantanea e indipendente dalla
+posizione corrente: se l'elicottero si sposta, ruota o beccheggia la
+telecamera deve inseguirlo con una propria velocità e reattività,
+in modo che risulti più naturale e piacevole. Per raggiungere questo
+obiettivo è necessario introdurre un livello di indirettezza tra
+stato corrente della telecamera e stato “desiderato”, ovvero la
+posizione e l'orientamento dell'oggetto inseguito.</SPAN></P>
+<P><SPAN STYLE="font-style: normal">Si definisce allora la struttura
+</SPAN><SPAN STYLE="font-style: normal"><B>CameraTarget</B></SPAN><SPAN STYLE="font-style: normal">
+che rappresenta la posizione che si desidera che la telecamera
+assuma. Questa comprende la posizione del target, il suo upvector e –
+sopratutto – il </SPAN><SPAN STYLE="font-style: normal"><B>displacement</B></SPAN><SPAN STYLE="font-style: normal">
+desiderato. Chiaramente, non si vorrà mai che la telecamera
+raggiunga esattamente la posizione del proprio target, visto che in
+quel caso non comparirebbe più nel tronco di vista (in OpenGL il
+near plane non è mai impostabile a 0). Si vuole piuttosto che ne
+insegua la posizione corrente ma che – una volta raggiunto –
+resti ad una certa distanza (magari parametrizzabile) per poterlo
+inquadrare; ecco spiegato il motivo del vettore di displacement: la
+posizione che la telecamera deve assumere è data dalla somma del
+vettore posizione del target e dal displacement. Per visualizzare
+meglio il concetto si immagini una superficie sferica centrata nel
+target e si ipotizzi di poter fissare la telecamera in un punto
+qualsiasi di tale superficie e con l'obiettivo posto al centro della
+sfera.<BR></SPAN>In qualsiasi momento, il target della telecamera è
+impostabile richiamando la funzione s<B>etCameraTarget()</B>.</P>
+<P><IMG SRC="imgs/strut_camera.jpg" NAME="immagini2" ALIGN=LEFT WIDTH=425 HEIGHT=258 BORDER=0>Resta
+da capire come passare da una modalità di funzionamento all'altra.
+In realtà anche su questo aspetto si è preferito mantenere una
+maggiore flessibilità e la telecamera può seguire dei comportamenti
+intermedi tra i due appena descritti. Tale comportamento è
+impostabile settando opportunamente il flag <B>locks</B> presente
+nella struttura della telecamera con dei valori predefiniti:</P>
+<UL>
+	<LI><DD>camera completamente indipendente (CAMLOCK_FREE): è la
+	modalità più utile per il debugging in quanto consente di girare
+	liberamente per la scena.</DD><LI><DD>
+	posizione della telecamera che insegue il target (CAMLOCK_POSITION):
+	la telecamera si sposta assieme al target ma il suo obiettivo rimane
+	fisso, utile per simulare un punto di vista che si allontana ma che
+	inquadra una posizione fissa.</DD><LI><DD>
+	obiettivo della telecamera che insegue il target (CAMLOCK_EYE): la
+	telecamera resta centrata sull'obiettivo ma la sua posizione resta
+	invariata, utilissimo per restare fermi a guardare l'elicottero che
+	si allontana.</DD><LI><DD>
+	camera in follow mode (CAMLOCK_ALL): la telecamera segue in tutto e
+	per tutto posizione e orientamento del target. È la modalità
+	utilizzata di default nel gioco.</DD></UL>
+<P><BR><BR>
+</P>
+<P>Sfortunatamente non c'è stato abbastanza tempo per permettere
+all'utente di passare liberamente tra le diverse modalità e di fatto
+vengono utilizzate soltanto la prima e l'ultima. Si utilizza il tasto
+C della tastiera per passare da una camera completamente libera al
+follow mode.</P>
+<P><B>NB</B>: la telecamera non effettua MAI alcun controllo delle
+collisioni, pertanto essa può attraversare qualsiasi oggetto,
+incluso il terreno.</P>
+<P><B>NB</B>: in modalità free, la posizione della telecamera non è
+controllata e l'utente può quindi raggiungere qualsiasi punto
+interno ed esterno alla scena.</P>
+<P ALIGN=RIGHT STYLE="page-break-before: always"><A HREF="index.html">Pagina
+principale</A></P>
+</BODY>
+</HTML>

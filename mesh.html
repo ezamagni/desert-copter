@@ -1,0 +1,151 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (MacOSX)">
+	<META NAME="AUTHOR" CONTENT="Enrico Zamagni">
+	<META NAME="CREATED" CONTENT="20120712;7223600">
+	<META NAME="CHANGEDBY" CONTENT="Enrico Zamagni">
+	<META NAME="CHANGED" CONTENT="20120715;12375700">
+	<META NAME="CHANGEDBY" CONTENT="Enrico Zamagni">
+	<STYLE TYPE="text/css">
+	<!--
+		DD { margin-bottom: 0.1cm }
+		P.collegamento-superiore { margin-top: 0.1cm; margin-bottom: 0.4cm; text-align: right }
+		H3.cjk { font-family: "SimSun" }
+		H3.ctl { font-family: "Lucida Sans" }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="it-IT" DIR="LTR">
+<P CLASS="collegamento-superiore"><A HREF="index.html">Pagina
+principale</A></P>
+<H1>Mesh tridimensionali</H1>
+<H3 CLASS="western">Formato OBJ</H3>
+<P>Gli unici elementi della scena che vengono disegnati in modo
+diretto sono la skybox per il cielo e il terreno. Tutti i restanti
+oggetti vengono renderizzati caricando una loro rappresentazione da
+file. Il formato scelto per la memorizzazione della struttura mesh è
+la specifica <B>.obj</B>.</P>
+<P>Tale formato è sostanzialmente organizzato come segue: 
+</P>
+<P><IMG SRC="imgs/objformat.jpg" NAME="immagini1" ALIGN=LEFT HSPACE=8 WIDTH=347 HEIGHT=261 BORDER=0>Una
+prima sezione del documento è dedicata alla definizione geometrica
+del modello, ovvero della posizione nello spazio 3D dei vertici che
+lo compongono, incluse le normali alle facce (descritte di
+seguito).<BR>Ogni linea del file descrive un singolo elemento (o
+parametro) della struttura:</P>
+<UL>
+	<LI><DD STYLE="margin-bottom: 0cm">La definizione di un vertice è
+	preceduta dal carattere <B>v</B> <SPAN STYLE="font-weight: normal">e
+	comprende le tre coordinate x, y, z del vertice.</SPAN></DD><LI><DD STYLE="margin-bottom: 0cm">
+	<SPAN STYLE="font-weight: normal">La definizione di una coordinata
+	texture è preceduta da </SPAN><B>vt</B> <SPAN STYLE="font-weight: normal">e
+	seguita dalle due coordinate u, v.</SPAN></DD><LI><DD>
+	<SPAN STYLE="font-weight: normal">La definizione di una normale è
+	preceduta da </SPAN><B>vn</B> <SPAN STYLE="font-weight: normal">e
+	specifica le tre componenti del vettore normale (x, y, z).</SPAN></DD></UL>
+<P STYLE="font-weight: normal">Dopo aver specificato le posizioni
+spaziali dei diversi elementi, il formato procede a una loro
+definizione topologica, quindi spiega come questi si compongono tra
+loro per formare le facce della mesh tridimensionale. 
+</P>
+<P><SPAN STYLE="font-weight: normal">Questa fase definisce ogni
+singola faccia attraverso il carattere </SPAN><B>f</B> <SPAN STYLE="font-weight: normal">seguito
+da una tripletta di vettori contenenti tre o due indici numerici
+separati da slash /. Ogni vettore specifica rispettivamente un
+vertice, una coordinata texture e una normale per mezzo di indici
+interi. Con tre di questi vettori è possibile definire senza
+ambiguità la conformazione di una faccia triangolare.<BR>NB: il
+formato obj supporta delle generiche facce poligonali tuttavia, per
+semplicità, nel codice vengono accettate soltanto modelli
+triangolarizzati. In caso di modelli che non hanno una texture
+associata, il secondo indice numerico di ogni tripletta viene omesso.</SPAN></P>
+<P><SPAN STYLE="font-weight: normal">Oltre alla sua struttura
+geometrica, il formato permette anche di specificare una libreria di
+materiali (vedi dopo) per il modello, ovvero le caratteristiche di
+colore ambientale, diffuso, speculare (e moltissimi altri parametri)
+per ogni faccia della mesh. A tale scopo il documento .obj può
+iniziare con la frase </SPAN><B>mtllib</B> <SPAN STYLE="font-weight: normal">seguita
+dal nome del file .mtl che contiene la descrizione dei vari materiali
+(ogni materiale è identificato da una stringa di caratteri: ovvero
+il suo nome). Durante la definizione topologica del modello è
+possibile fare riferimento a un materiale da applicare alle facce che
+verranno descritte da quel punto in poi per mezzo del termine </SPAN><B>usemtl</B>
+<SPAN STYLE="font-weight: normal">seguito dal nome del materiale
+desiderato.</SPAN></P>
+<H3 CLASS="western" STYLE="page-break-after: avoid"><B>Memorizzazione
+di un modello</B></H3>
+<P><IMG SRC="imgs/strut_model.png" NAME="immagini2" ALIGN=LEFT HSPACE=8 VSPACE=6 WIDTH=384 HEIGHT=311 BORDER=0>Per
+poter gestire un modello tridimensionale è necessario prevedere una
+adeguata struttura dati che contenga e organizzi le informazioni
+necessarie al suo utilizzo. La struttura <B>Model</B> utilizzata per
+questo scopo è descritta in <B>model.h</B> <SPAN STYLE="font-weight: normal">ed
+è organizzata come segue:</SPAN></P>
+<UL>
+	<LI><DD STYLE="margin-bottom: 0cm"><SPAN STYLE="font-weight: normal">quattro
+	valori interi (</SPAN><B>num..</B><SPAN STYLE="font-weight: normal">)
+	informano sulla quantità di elementi geometrici presenti nel
+	modello, quindi da quanti vertici è composto, quante facce, etc...</SPAN></DD><LI><DD STYLE="margin-bottom: 0cm">
+	<SPAN STYLE="font-weight: normal">in base ai valori sopra citati,
+	vengono allocate quattro strutture che descrivono concretamente gli
+	elementi del modello: nel caso dei vertici e delle normali vengono
+	usati dei vettori tridimensionali, per le coordinate texture un
+	vettore bidimensionale, per la descrizione delle varie facce viene
+	usata la struttura </SPAN><B>MFace</B> <SPAN STYLE="font-weight: normal">che
+	comprende la tripletta di indici sopra descritta.</SPAN></DD><LI><DD>
+	<SPAN STYLE="font-weight: normal">La struttura </SPAN><B>MtlLib</B>
+	<SPAN STYLE="font-weight: normal">descrive l'intera libreria di
+	materiali associata al modello e viene descritta in un <A HREF="materiali.html">apposito
+	capitolo</A>.</SPAN></DD></UL>
+<P STYLE="font-weight: normal">Si sottolinea come la struttura Model
+sia focalizzata esclusivamente alla memorizzazione di un modello in
+vista di una sua semplice resa grafica e non sia affatto pensata per
+un suo editing o per funzionalità di modellazione.</P>
+<H3 CLASS="western">Parsing di un file di modello</H3>
+<P>La lettura di un file .obj viene affrontata nella funzione
+<I>loadModelFromOBJ()</I><SPAN STYLE="font-variant: normal"><SPAN STYLE="font-style: normal">.
+Questa corposa procedura è suddivisa concettualmente in due passi:</SPAN></SPAN></P>
+<OL>
+	<LI><DD STYLE="margin-bottom: 0cm"><SPAN STYLE="font-variant: normal"><SPAN STYLE="font-style: normal">Si
+	scorre l'intero contenuto del file alla ricerca del numero di
+	elementi da memorizzare, si contano cioè le righe che iniziano con
+	i prefissi </SPAN></SPAN><I>v</I><SPAN STYLE="font-variant: normal"><SPAN STYLE="font-style: normal">,
+	</SPAN></SPAN><I>vn</I><SPAN STYLE="font-variant: normal"><SPAN STYLE="font-style: normal">,
+	</SPAN></SPAN><I>f</I><SPAN STYLE="font-variant: normal"> </SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="font-style: normal">e
+	così via per poter poi allocare un'adeguata quantità di memoria
+	per le strutture che conterranno i dati concreti sulla geometria e
+	le caratteristiche del modello. In questa prima fase si cerca anche
+	un'eventuale libreria di materiali associata all'oggetto ed
+	eventualmente si lancia la procedura per il suo caricamento.</SPAN></SPAN></DD><LI><DD STYLE="font-variant: normal; font-style: normal">
+	Avendo istanziato le strutture per la descrizione degli elementi, si
+	riprende la lettura del file dalla prima riga per poterle compilare.
+	Terminata questa fase, il modello è pronto per essere utilizzato e
+	ne viene restituito il puntatore.</DD></OL>
+<P><SPAN STYLE="font-variant: normal"><SPAN STYLE="font-style: normal">La
+funzione </SPAN></SPAN><I>destroyModel()</I><SPAN STYLE="font-variant: normal">
+</SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="font-style: normal">si
+preoccupa di liberare tutte le risorse occupate da un modello e dai
+materiali associati.</SPAN></SPAN></P>
+<H3 CLASS="western" STYLE="font-variant: normal; font-style: normal">Rendering
+di un modello</H3>
+<P><SPAN STYLE="font-variant: normal"><SPAN STYLE="font-style: normal">La
+resa grafica di una struttura </SPAN></SPAN><I>Model</I><SPAN STYLE="font-variant: normal">
+</SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="font-style: normal">è
+realizzata nella procedura </SPAN></SPAN><I>renderModel()</I><SPAN STYLE="font-variant: normal">
+</SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="font-style: normal">e
+risulta un'operazione piuttosto semplice. Lo sforzo maggiore è
+infatti quello di gestire i diversi materiali associati alle facce e
+la maggior parte del codice di questa funzione è dedicato a questo
+scopo ed è descritto in un'apposita sezione.<BR>Il rendering di un
+modello è ottenuto per mezzo di un unico grande ciclo, con tante
+iterazioni tante quante sono le facce presenti nella struttura dati.
+Per ciascuna faccia è infatti necessario fornire – attraverso
+adeguate chiamate opengl – la posizione dei tre vertici che la
+compongono (si utilizzano GL_TRIANGLES) e per ogni vertice si
+specificano la normale e le eventuali coordinate texture associate.</SPAN></SPAN></P>
+<P CLASS="collegamento-superiore" STYLE="page-break-before: always"><A HREF="index.html"><SPAN STYLE="font-variant: normal"><SPAN STYLE="font-style: normal">Pagina
+principale</SPAN></SPAN></A></P>
+</BODY>
+</HTML>

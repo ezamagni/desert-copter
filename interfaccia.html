@@ -1,0 +1,112 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (MacOSX)">
+	<META NAME="AUTHOR" CONTENT="Enrico Zamagni">
+	<META NAME="CREATED" CONTENT="20120713;14382500">
+	<META NAME="CHANGEDBY" CONTENT="Enrico Zamagni">
+	<META NAME="CHANGED" CONTENT="20120713;22543800">
+	<STYLE TYPE="text/css">
+	<!--
+		H3.cjk { font-family: "SimSun" }
+		H3.ctl { font-family: "Lucida Sans" }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="it-IT" DIR="LTR">
+<P ALIGN=RIGHT><A HREF="index.html">Pagina principale</A></P>
+<H1>Interfaccia utente</H1>
+<P>Per interfaccia utente in un videogioco interattivo si intende
+tutto quello che compare a schermo e che non fa parte della scena che
+si intende simulare. Rientrano in questa categoria i menu di gioco, i
+pannelli con i punteggi, gli indicatori delle statistiche di gioco,
+istruzioni e tutorial impartiti durante la partita, minimappe e
+moltissimi altri strumenti utili per interagire con il gioco stesso o
+raccogliere informazioni sulla partita.</P>
+<P>Nel progetto sono state realizzate due tipologie di interfaccia: i
+menu di gioco e gli oggetti dello HUD (Head-up display). Con questo
+termine, nel gergo dei videogiocatori, si intendono quegli elementi
+grafici in sovrimpressione visualizzati durante lo svolgimento del
+gioco che forniscono un qualche tipo di informazione utile al
+giocatore: quanti punti ha realizzato, quante vite rimangono prima
+del game-over, una mappa che indica dove andare, una bussola e così
+via. I due header <B>gui.h</B> e <B>hud.h</B> realizzano le
+funzionalità necessarie per il funzionamento rispettivamente dei
+menu di gioco e dell'HUD.</P>
+<H3 CLASS="western">Rendering dell'interfaccia</H3>
+<P>L'intera fase di rendering di un frame è orchestrata dalla
+funzione <B>renderFrame()</B> in <I>main.c</I> ed è nettamente
+divisa in due step: dapprima ci si preoccupa di renderizzare la scena
+3D con tutti gli elementi che la compongono, in un secondo momento si
+passa a disegnare gli elementi di interfaccia. In questo modo è
+possibile assicurarsi che la resa dei primi non influisca sui secondi
+(e viceversa) e – sopratutto – è possibile fare in modo che
+l'interfaccia venga sovrapposta correttamente alla scena 3D
+utilizzando un semplicissimo stratagemma: si reimposta la matrice
+GL_PROJECTION in modo da passare a una proiezione ortogonale con il
+rettangolo di vista corrispondente all'intero viewport e si resetta
+la matrice GL_MODELVIEW. Con questo sistema è come se si disegnasse
+su una superficie bidimensionale e tutte le primitive descritte da
+quel momento in poi compariranno in primo piano sovrapponendosi alla
+scena precedentemente disegnata.<BR>È comunque importante
+disattivare il depth test e l'illuminazione (per convenzione
+quest'ultima funzionalità è sempre assunta come disabilitata e
+viene accesa solo quando necessario). In questa seconda fase viene
+inoltre mantenuto abilitato per convenzione il blending dei colori
+visto che è una funzionalità quasi sempre utilizzata per disegnare
+gli elementi dell'interfaccia; ovviamente una procedura di disegno
+può sempre disabilitare questo flag se lo ritiene necessario a patto
+che ripristini lo stato precedente prima di restituire il controllo.
+Tra le numerosissime impostazioni possibili per la funzione di
+blending, la modalità che è stata utilizzata in pressoché tutte le
+occasioni è quella richiamata con l'istruzione
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA), probabilmente la
+più comune tra tutte, in quanto consente di utilizzare il canale
+alpha di un'immagine per ottenere un semplice effetto di trasparenza.
+Con questa opzione infatti il fragment in ingresso viene moltiplicato
+per il valore della sua componente alpha (GL_SRC_ALPHA) mentre quello
+di destinazione viene moltiplicato per il valore complementare
+rispetto a 1, i due frammenti risultanti vengono infine sommati per
+ottenere quello definitivo.</P>
+<P>Sfortunatamente, OpenGL non mette a disposizione delle
+funzionalità per stampare direttamente da font del testo su schermo,
+pertanto – per non essere costretti a ricorrere a delle librerie di
+terze parti – si è deciso di mantenere l'interfaccia il più
+semplice e minimale possibile e di basarsi esclusivamente su texture
+preimpostate, con delle stringhe di testo già rasterizzate. Questa
+strategia rende possibile la realizzazione dei menu di gioco in
+maniera decisamente semplice e immediata ma ha lo svantaggio di non
+consentire di stampare del testo o delle cifre in maniera dinamica,
+ovvero controllabile da codice. Per poter disegnare il punteggio di
+gioco (quindi un numero variabile di cifre) è chiaramente necessario
+impiegare un metodo più sofisticato.<BR>Si è deciso di utilizzare
+una tecnica denominata “SpriteFont” (termine coniato dalla
+libreria XNA di Microsoft) che prevede di dotarsi di un'unica texture
+sulla quale viene prestampato l'intero set di caratteri che si
+intende utilizzare. In questo modo “ritagliando” volta per volta
+il riquadro che contiene il carattere desiderato, applicando una
+tecnica di blending per eliminare le parti trasparenti dell'immagine
+e disegnandola nel punto desiderato, è possibile stampare una
+qualsiasi stringa di caratteri.</P>
+<P>Nel gioco è stata sperimentata questa tecnica ma in una forma
+ridotta e semplificata: era infatti sufficiente stampare delle cifre
+numeriche, pertanto la texture utilizzata riporta soltanto le 10
+cifre da 0 a 9 disposte su un'unica riga.<BR>Si sottolinea soltanto
+che nel caso della stampa delle cifre del punteggio, si è preferito
+utilizzare una tecnica alternativa al blending basato su valore
+alpha. Si è provato cioè a “sommare” i pixel che compongono le
+cifre a quelli della scena già renderizzata (additive blending).
+Questo spiega perché la texture delle cifre non dispone di un canale
+alfa ma ha invece un fondo completamente nero: tale colore –
+sommato ai frammenti di destinazione – non comporta alcun
+cambiamento e risulta del tutto trasparente. NB: questa tecnica ha il
+leggero svantaggio di rendere le cifre poco visibili se stampate su
+un fondo chiaro (in caso di additive blending, un colore già chiaro
+resta comunque chiaro); si è comunque preferito mantenere questa
+scelta.</P>
+<P ALIGN=RIGHT STYLE="page-break-before: always"><A HREF="index.html">Pagina
+principale</A></P>
+</BODY>
+</HTML>

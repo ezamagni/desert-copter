@@ -1,0 +1,104 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (MacOSX)">
+	<META NAME="AUTHOR" CONTENT="Enrico Zamagni">
+	<META NAME="CREATED" CONTENT="20120714;21362200">
+	<META NAME="CHANGEDBY" CONTENT="Enrico Zamagni">
+	<META NAME="CHANGED" CONTENT="20120715;23001500">
+	<META NAME="CHANGEDBY" CONTENT="Enrico Zamagni">
+</HEAD>
+<BODY LANG="it-IT" DIR="LTR">
+<P ALIGN=RIGHT><A HREF="index.html">Pagina principale</A></P>
+<H1>Texturing</H1>
+<P>L'elaborato fa un uso estremo del texture mapping per dare un
+aspetto più realistico ai vari elementi della scena. Quasi tutti gli
+oggetti renderizzati a schermo (inclusa l'interfaccia utente, con
+poche eccezioni) prevedono l'utilizzo di texture colore.</P>
+<P>Gli elementi della scena che fanno uso di texture derivanti da dei
+materiali applicati sono l'elicottero, le mongolfiere, il tabellone e
+le casse. La <A HREF="materiali.html">gestione delle librerie .mtl</A>
+rende infatti estremamente semplice applicare il texture mapping a
+dei modelli preparati con tool di modellazione e opportunamente
+adattati. In questi casi il programmatore non deve nemmeno curarsi di
+fornire le coordinate texture al sottosistema grafico visto che lo
+sforzo è preso in carico dal formato .obj e dalla funzione
+<I>renderModel()</I> di <I>model.c</I>.<BR>In molti altri casi
+(specialmente nella gestione dell'interfaccia utente) le texture
+vengono caricate esplicitamente e le coordinate vengono fornite
+direttamente dal codice.<BR>Nella realizzazione dell'enviromental
+mapping e nella gestione della minimappa, le texture vengono invece
+generate manualmente, piuttosto che caricate dal disco fisso.</P>
+<P>È chiaro che con un utilizzo così frequente del texturing è
+utile avvalersi di un componente che si occupi di fornire un supporto
+flessibile al caricamento del file di immagine, al binding in OpenGL
+e al filtering secondo i parametri che più si adattano al contesto
+di utilizzo.<BR>Queste funzionalità vengono da due importantissime
+procedure definite in <B>texture.h</B><SPAN STYLE="font-weight: normal">.</SPAN></P>
+<P>La prima delle due, <B>loadTextureFromTGA()</B>, è una funzione
+di basso livello che carica dal filesystem un'immagine nel formato
+.tga (viene eventualmente supportata la compressione RLE) e la
+riversa in un'area di memoria, pronta per essere utilizzata.</P>
+<P>La procedura <B>bindTexture()</B> – <SPAN STYLE="font-weight: normal">utilizzata</SPAN>
+praticamente ovunque dagli altri componenti – si prende l'incarico
+di caricare un'immagine specificata in input (richiamando
+<I>loadTextureFromTGA()</I>) e di realizzarne il binding in OpenGL,
+preoccupandosi di richiedere un nome per la texture (un intero senza
+segno che identifica univocamente la texture nel contesto OpenGL
+attivo) e svolgendo altri compiti utilissimi quali la generazione
+automatica dei diversi livelli di mipmap e il setting delle funzioni
+di filtering.<BR>Per fare in modo che la funzione possa adattarsi
+alle diverse esigenze, viene presa in input una semplice struttura
+(<B>TexParam</B>) che specifica i diversi parametri da utilizzare per
+gestire la texture richiesta: un flag per richiedere la generazione
+automatica dei livelli di mipmap, i filtri di minification e
+magnification, il formato della texture (utile per poter utilizzare
+sia immagini GL_RGB che GL_RGBA) e il tipo di wrap da impiegare
+(GL_REPEAT oppure GL_CLAMP). In alternativa è possibile passare un
+valore nullo e la funzione proseguirà utilizzando dei parametri di
+default.</P>
+<P>Ovviamente queste procedure non alterano lo stato OpenGL nel
+momento in cui vengono richiamate. Nei punti del codice dove è
+necessario fare utilizzo di texture mapping ci si preoccupa di
+abilitare il flag GL_TEXTURE_2D. Si è deciso, per esigenza di
+uniformità, di adottare la convenzione per cui – durante la fase
+di rendering – soltanto il flag GL_DEPTH_TEST e GL_CULL_FACE sono
+abilitati. Qualora una funzione di rendering abbia bisogno di
+funzionalità più avanzate (texturing, shading, blending,
+stenciling, …) deve preoccuparsi non solo di abilitare o
+disabilitare i flag a seconda dell'effetto che vuole ottenere, ma
+anche ripristinare lo stato precedente alla sua chiamata per non
+lasciare le procedure successive in uno stato intermedio non
+prevedibile. Una funzionalità estremamente utile offerta da OpenGL a
+tale scopo è data dalle istruzioni <I>glPushAttrib()</I> e
+<I>glPopAttrib()</I> che consentono per mezzo di opportuni flag di
+salvare selettivamente lo stato OpenGL e ripristinarlo
+successivamente in maniera del tutto analoga a quanto avviene con le
+matrici di trasformazione.<BR>È importante sottolineare che durante
+la fase di disegno dell'interfaccia grafica, viene utilizzata una
+convenzione diversa: il flag GL_DEPTH_TEST viene disabilitato per
+ovvi motivi, GL_TEXTURE_2D e GL_BLENDING vengono invece tenuti attivi
+visto che quasi tutti i componenti dell'interfaccia utilizzano queste
+funzionalità. Anche in questo caso, qualora una funzione intenda
+alterare lo stato deve avere cura di riportarlo nelle condizioni in
+cui lo ha trovato.</P>
+<P>L'elaborato supporta soltanto immagini .tga, ma è comunque facile
+estenderne il supporto ad altri formati in quanto è sufficiente
+implementare una procedura adeguata per il parsing dei formati che si
+desidera utilizzare e richiamare da <I>bindTexture()</I> la funzione
+di caricamento adeguata, magari distinguendo in base all'estensione
+del nome del file passato in input.</P>
+<P>NB: anche se le specifiche originali di OpenGL imponevano
+l'utilizzo di texture dalle dimensioni corrispondenti a potenze di
+due, questo requisito è in realtà stato rilassato da numerose
+versioni a questa parte, visto che le moderne architetture hardware
+riescono tranquillamente a supportare immagini di ogni dimensione.
+Laddove possibile si è comunque cercato di adeguarsi a questa
+direttiva, ma non tutte le texture utilizzate dal progetto seguono
+strettamente questa imposizione.</P>
+<P ALIGN=RIGHT STYLE="page-break-before: always"><A HREF="index.html">Pagina
+principale</A></P>
+</BODY>
+</HTML>
