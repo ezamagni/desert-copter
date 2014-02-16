@@ -22,7 +22,18 @@ Tutti i modelli 3D utilizzati e buona parte delle texture sono state ricavate da
 
 Desert Copter è ispirato al (vetusto) videogioco SimCopter della Maxis; questo progetto vuole esserne un affezionato omaggio.
 
-ISTRUZIONI DI COMPILAZIONE:
+PREREQUISITI
+============
+
+Il progetto è stato collaudato su distribuzione Ubuntu ma dovrebbe essere in grado di funzionare senza problemi su qualsiasi sistema linux dotato dei seguenti pacchetti:
+- OpenGL (Mesa)
+- SDL 1.2
+- freeglut
+Per installare tali pacchetti mediante aptitude è possibile utilizzare il comando
+sudo apt-get install mesa-common-dev freeglut3-dev libsdl1.2-dev
+
+ISTRUZIONI DI COMPILAZIONE
+==========================
 
 Per compilare il progetto seguire i seguenti passi:
 - portarsi da terminale nella cartella "Debug" all'interno della cartella del progetto
